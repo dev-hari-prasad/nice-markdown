@@ -247,13 +247,19 @@ const App: React.FC = () => {
          {/* Left: Credits */}
          <div className="flex items-center gap-2 relative">
             <div className="flex items-center gap-2 opacity-75 hover:opacity-100 transition-opacity">
-                <span>Built by <strong style={{ color: 'var(--color-text)' }}>GigaChad</strong></span>
-                <span className="mx-1">•</span>
+                <span>Built by{' '}
+                      <a href="https://github.com/dev-hari-prasad"  target="_blank" rel="noopener noreferrer"
+                        style={{
+                          color: 'var(--color-text)',
+                          fontWeight: 'bold' }}>Hari Prasad 
+                      </a>
+                </span>
+              <span className="mx-1">•</span>
             </div>
             
             <div className="relative group">
                 <a 
-                    href="https://github.com" 
+                    href="https://github.com/dev-hari-prasad/nice-markdown" 
                     target="_blank" 
                     onClick={dismissStarPrompt}
                     className="hover:underline flex items-center gap-1 opacity-75 hover:opacity-100 transition-opacity" 
