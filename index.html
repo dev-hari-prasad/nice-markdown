@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Nice Markdown | Technical Markdown Editor</title>
+    <meta name="title" content="Nice Markdown | Technical Markdown Editor">
+    <meta name="description" content="A precise, minimal, and serious markdown previewer designed for backend engineers and power users. Dark-mode first, keyboard-centric, and distraction-free.">
+    <meta name="keywords" content="markdown, editor, previewer, developer tool, technical writing, syntax highlighting, mermaid diagrams, latex math, dark mode">
+    <meta name="author" content="GigaChad">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nicemarkdown.com/">
+    <meta property="og:title" content="Nice Markdown | Technical Markdown Editor">
+    <meta property="og:description" content="A precise, minimal, and serious markdown previewer designed for backend engineers and power users. Dark-mode first, keyboard-centric, and distraction-free.">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nicemarkdown.com/">
+    <meta property="twitter:title" content="Nice Markdown | Technical Markdown Editor">
+    <meta property="twitter:description" content="A precise, minimal, and serious markdown previewer designed for backend engineers and power users. Dark-mode first, keyboard-centric, and distraction-free.">
+    
+    <!-- Favicon (SVG Data URI) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -5 1034 1034' fill='%233b82f6'%3E%3Cpath d='M922 319q-1 0 -2 1h-11v0h-836q-18 0 -33.5 8.5t-25.5 22.5q-17 26 -13 57v461q1 18 11 32.5t24 22.5q25 14 55 10v1l843 -1q18 -1 32.5 -11t22.5 -24q14 -24 10 -55h1l-1 -459q-1 -17 -11 -31.5t-24 -23.5q-19 -10 -42 -11zM918 367h2q12 0 20 5q6 3 8.5 6.5t2.5 9.5 l1 456v3q2 16 -5 29q-3 5 -6.5 7.5t-9.5 2.5l-840 1h-3q-16 2 -28 -5q-6 -3 -8.5 -6.5t-2.5 -9.5v-458l-1 -4q-2 -14 5.5 -25t18.5 -11h837zM145 464v327h96v-188l96 120l96 -120v188h96v-327h-96l-96 120l-96 -120h-96zM697 464v168h-96l144 159l144 -159h-96v-168h-96z'/%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for Math -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    
+    <!-- Prism Theme for Syntax Highlighting (Customized via CSS overrides later, but base is needed) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+    <style>
+      /* Reset & Base */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        overflow: hidden; /* App handles scrolling */
+        background-color: var(--color-bg, #09090b);
+        color: var(--color-text, #a1a1aa);
+      }
+
+      /* Custom Scrollbar driven by CSS Variables */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--color-scroll-track, #09090b);
+        border-left: 1px solid var(--color-border, #27272a);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--color-scroll-thumb, #3f3f46);
+        border: 2px solid var(--color-scroll-track, #09090b);
+        border-radius: var(--radius, 4px);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        opacity: 0.8;
+      }
+
+      /* Editor Specifics */
+      .editor-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      
+      .editor-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background: transparent;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        overflow: auto; 
+        resize: none;
+        outline: none;
+        tab-size: 2;
+        font-family: var(--font-mono, 'JetBrains Mono');
+        line-height: 1.6;
+        letter-spacing: -0.01em;
+      }
+
+      .editor-textarea {
+        z-index: 10;
+        color: transparent;
+        caret-color: var(--color-accent, #3b82f6);
+        background: transparent;
+      }
+
+      .editor-highlight {
+        z-index: 5;
+        pointer-events: none;
+        color: var(--color-text-active, #e4e4e7);
+      }
+
+      .editor-textarea::selection {
+        background: rgba(59, 130, 246, 0.2);
+        color: transparent;
+      }
+
+      /* Markdown Preview Specifics */
+      .markdown-body {
+        line-height: 1.6;
+      }
+      
+      .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+        color: var(--color-text, #f4f4f5);
+        font-weight: 600;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        letter-spacing: -0.02em;
+      }
+
+      .markdown-body h1 { border-bottom: 1px solid var(--color-border, #27272a); padding-bottom: 0.3em; font-size: 1.75em; }
+      .markdown-body h2 { font-size: 1.4em; }
+      .markdown-body p { margin-bottom: 1.2em; }
+      
+      .markdown-body code {
+        background: var(--color-code-bg, #27272a);
+        color: var(--color-code-text, #e4e4e7);
+        padding: 0.2em 0.4em;
+        font-size: 0.85em;
+        border-radius: var(--radius, 4px);
+      }
+      
+      .markdown-body pre {
+        background: var(--color-code-bg, #101012);
+        border: 1px solid var(--color-border, #27272a);
+        padding: 1rem;
+        overflow-x: auto;
+        margin-bottom: 1.5em;
+        border-radius: var(--radius, 4px);
+      }
+      
+      .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+        color: inherit;
+        font-size: 0.85em;
+      }
+
+      .markdown-body blockquote {
+        border-left: 3px solid var(--color-accent, #3b82f6);
+        padding-left: 1rem;
+        margin-left: 0;
+        color: var(--color-text-muted, #a1a1aa);
+        background: transparent;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+
+      .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin-bottom: 1.2em; }
+      .markdown-body li { margin-bottom: 0.25em; }
+
+      .markdown-body table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5em;
+        font-size: 0.9em;
+      }
+      
+      .markdown-body th, .markdown-body td {
+        border: 1px solid var(--color-border, #27272a);
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+      }
+      
+      .markdown-body th {
+        background: var(--color-ui, #18181b);
+        color: var(--color-text, #fff);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+      }
+
+      .markdown-body a {
+        color: var(--color-accent, #60a5fa);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--color-accent, #60a5fa);
+      }
+      .markdown-body a:hover { border-bottom-style: solid; }
+      
+      .markdown-body img {
+        max-width: 100%;
+        border: 1px solid var(--color-border, #27272a);
+        border-radius: var(--radius, 4px);
+      }
+      
+      .markdown-body hr {
+        border: 0;
+        border-top: 1px solid var(--color-border, #27272a);
+        margin: 2em 0;
+      }
+
+      /* Checkbox styles */
+      .markdown-body input[type="checkbox"] {
+        appearance: none;
+        width: 1em;
+        height: 1em;
+        border: 1px solid var(--color-text-muted, #52525b);
+        background: var(--color-bg, #18181b);
+        vertical-align: middle;
+        margin-right: 0.5em;
+        position: relative;
+        top: -1px;
+        border-radius: var(--radius, 2px);
+      }
+      .markdown-body input[type="checkbox"]:checked {
+        background: var(--color-accent, #3b82f6);
+        border-color: var(--color-accent, #3b82f6);
+      }
+
+      /* Mermaid container */
+      .mermaid {
+        background: var(--color-code-bg, #18181b);
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        border: 1px solid var(--color-border, #27272a);
+        margin-bottom: 1.5rem;
+        border-radius: var(--radius, 4px);
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(2px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Print Styles for PDF Export */
+      @media print {
+        @page { margin: 2cm; }
+        
+        body, #root, .app-container {
+          background-color: white !important;
+          color: black !important;
+          height: auto !important;
+          min-height: 100% !important;
+          width: 100% !important;
+          overflow: visible !important;
+          position: static !important;
+          display: block !important;
+        }
+
+        /* Hide UI elements */
+        .toolbar-container, .editor-pane, .resizer, .footer-statusbar, .settings-popover, .download-popover {
+          display: none !important;
+        }
+        
+        /* Ensure Main Content Area is visible */
+        .main-area {
+          display: block !important;
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        
+        /* Force Preview to take over */
+        .preview-pane {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          border: none !important;
+          position: static !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .markdown-body {
+          padding: 0 !important;
+          overflow: visible !important;
+          height: auto !important;
+          color: black !important;
+        }
+        
+        /* Ensure readable high contrast for print */
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body p, .markdown-body li {
+          color: #000 !important;
+        }
+        .markdown-body pre, .markdown-body code {
+          border: 1px solid #ccc !important;
+          background: #f5f5f5 !important; 
+          color: #000 !important;
+          box-shadow: none !important;
+        }
+        
+        .markdown-body a {
+          text-decoration: underline !important;
+          color: #000 !important;
+          border-bottom: none !important;
+        }
+
+        .mermaid {
+          border: 1px solid #ccc !important;
+          background: #fff !important;
+        }
+      }
+
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "prismjs": "https://esm.sh/prismjs@^1.30.0",
+    "prismjs/": "https://esm.sh/prismjs@^1.30.0/",
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+    "remark-math": "https://esm.sh/remark-math@^6.0.0",
+    "rehype-katex": "https://esm.sh/rehype-katex@^7.0.1",
+    "rehype-raw": "https://esm.sh/rehype-raw@^7.0.0",
+    "mermaid": "https://esm.sh/mermaid@^11.12.2",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

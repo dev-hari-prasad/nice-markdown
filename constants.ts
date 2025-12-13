@@ -1,0 +1,185 @@
+import { Theme, ThemeColors } from './types';
+
+export const THEME_CONFIG: Record<Theme, ThemeColors> = {
+  [Theme.ATOM_ONE_DARK]: {
+    name: 'Atom One Dark',
+    bg: '#282c34',
+    ui: '#21252b',
+    border: '#3e4451',
+    text: '#abb2bf',
+    textMuted: '#5c6370',
+    accent: '#61afef',
+    hover: '#2c313a',
+    active: '#3e4451',
+    codeBg: '#282c34',
+    codeText: '#abb2bf',
+    lineNum: '#4b5263',
+    scrollTrack: '#282c34',
+    scrollThumb: '#5c6370',
+    tooltipBg: '#21252b',
+    tooltipText: '#abb2bf'
+  },
+  [Theme.VOID]: {
+    name: 'Void',
+    bg: '#09090b',
+    ui: '#09090b',
+    border: '#27272a',
+    text: '#a1a1aa',
+    textMuted: '#52525b',
+    accent: '#f4f4f5',
+    hover: '#27272a',
+    active: '#3f3f46',
+    codeBg: '#18181b',
+    codeText: '#e4e4e7',
+    lineNum: '#3f3f46',
+    scrollTrack: '#09090b',
+    scrollThumb: '#3f3f46',
+    tooltipBg: '#18181b',
+    tooltipText: '#ffffff'
+  },
+  [Theme.TERMINAL]: {
+    name: 'Terminal',
+    bg: '#050505',
+    ui: '#0a0a0a',
+    border: '#333333',
+    text: '#4ade80',
+    textMuted: '#15803d',
+    accent: '#22c55e',
+    hover: '#1a1a1a',
+    active: '#262626',
+    codeBg: '#111',
+    codeText: '#86efac',
+    lineNum: '#166534',
+    scrollTrack: '#050505',
+    scrollThumb: '#22c55e',
+    tooltipBg: '#000000',
+    tooltipText: '#4ade80'
+  },
+  [Theme.MIDNIGHT]: {
+    name: 'Midnight',
+    bg: '#0f172a',
+    ui: '#0f172a',
+    border: '#1e293b',
+    text: '#94a3b8',
+    textMuted: '#475569',
+    accent: '#38bdf8',
+    hover: '#1e293b',
+    active: '#334155',
+    codeBg: '#1e293b',
+    codeText: '#e2e8f0',
+    lineNum: '#334155',
+    scrollTrack: '#0f172a',
+    scrollThumb: '#334155',
+    tooltipBg: '#0f172a',
+    tooltipText: '#38bdf8'
+  },
+  [Theme.DRACULA]: {
+    name: 'Dracula',
+    bg: '#282a36',
+    ui: '#282a36',
+    border: '#44475a',
+    text: '#f8f8f2',
+    textMuted: '#6272a4',
+    accent: '#bd93f9',
+    hover: '#44475a',
+    active: '#6272a4',
+    codeBg: '#21222c',
+    codeText: '#50fa7b',
+    lineNum: '#6272a4',
+    scrollTrack: '#282a36',
+    scrollThumb: '#bd93f9',
+    tooltipBg: '#282a36',
+    tooltipText: '#f8f8f2'
+  },
+  [Theme.GITHUB_DARK]: {
+    name: 'GitHub Dark',
+    bg: '#0d1117',
+    ui: '#0d1117',
+    border: '#30363d',
+    text: '#c9d1d9',
+    textMuted: '#8b949e',
+    accent: '#58a6ff',
+    hover: '#21262d',
+    active: '#30363d',
+    codeBg: '#161b22',
+    codeText: '#e6edf3',
+    lineNum: '#484f58',
+    scrollTrack: '#0d1117',
+    scrollThumb: '#30363d',
+    tooltipBg: '#0d1117',
+    tooltipText: '#c9d1d9'
+  },
+  [Theme.GITHUB_LIGHT]: {
+    name: 'GitHub Light',
+    bg: '#ffffff',
+    ui: '#f6f8fa',
+    border: '#d0d7de',
+    text: '#1f2328',
+    textMuted: '#656d76',
+    accent: '#0969da',
+    hover: '#eef1f4',
+    active: '#dee1e6',
+    codeBg: '#0d1117', // Dark background for code blocks to match Prism Tomorrow
+    codeText: '#c9d1d9', // Light text for code
+    lineNum: '#8c959f',
+    scrollTrack: '#ffffff',
+    scrollThumb: '#d0d7de',
+    tooltipBg: '#1f2328',
+    tooltipText: '#ffffff'
+  },
+  [Theme.NORD_LIGHT]: {
+    name: 'Snow Storm',
+    bg: '#eceff4',
+    ui: '#e5e9f0',
+    border: '#d8dee9',
+    text: '#2e3440',
+    textMuted: '#4c566a',
+    accent: '#5e81ac',
+    hover: '#d8dee9',
+    active: '#d8dee9',
+    codeBg: '#2e3440', // Dark background (Nord0) for code blocks
+    codeText: '#eceff4', // Light text (Nord6) for code
+    lineNum: '#99aab9',
+    scrollTrack: '#eceff4',
+    scrollThumb: '#88c0d0',
+    tooltipBg: '#2e3440',
+    tooltipText: '#eceff4'
+  }
+};
+
+export const DEFAULT_MARKDOWN = `# Nice Markdown
+
+## 1. Introduction
+Nice Markdown is a minimal, keyboard-centric editor for developers.
+It is designed to be **precise** and **distraction-free**.
+
+### Core Philosophy
+- **Speed**: Instant parsing and rendering.
+- **Focus**: No toolbars cluttering the writing space.
+- **Utility**: First-class support for code, math, and diagrams.
+
+## 2. Features
+
+### Syntax Highlighting
+Full support for major languages with terminal-like styling.
+
+\`\`\`rust
+fn main() {
+    println!("Hello, efficient world!");
+}
+\`\`\`
+
+### Mathematical Notation
+Render LaTeX equations natively:
+$$
+f(x) = \\int_{-\\infty}^\\infty \\hat f(\\xi)\\,e^{2\\pi i \\xi x} \\,d\\xi
+$$
+
+### Structured Data
+| Command | Action | Shortcut |
+|:--------|:-------|:---------|
+| \`:w\`    | Save   | \`Cmd+S\`  |
+| \`:q\`    | Quit   | \`Cmd+W\`  |
+
+> "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
+`;
