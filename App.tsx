@@ -17,6 +17,8 @@ const App: React.FC = () => {
   const [syncScroll, setSyncScroll] = useState(true);
   const [borderRadius, setBorderRadius] = useState(0);
   const [isCentered, setIsCentered] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCopyToast, setShowCopyToast] = useState(false);
   
   // Promotion state
   const [showStarPrompt, setShowStarPrompt] = useState(false);
@@ -68,6 +70,39 @@ const App: React.FC = () => {
     lines: markdown.split('\n').length
   }), [markdown]);
 
+  const searchResults = useMemo(
+    () => {
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return [];
+
+      return markdown
+        .split('\n')
+        .map((text, idx) => ({ line: idx + 1, text }))
+        .filter(r => r.text.toLowerCase().includes(q))
+        .slice(0, 8);
+    },
+    [markdown, searchQuery]
+  );
+
+  const handleJumpToLine = (line: number) => {
+    if (!editorRef.current) return;
+
+    const totalLines = stats.lines || 1;
+    const ratio = totalLines > 1 ? (line - 1) / (totalLines - 1) : 0;
+
+    const editorEl = editorRef.current;
+    const editorTarget =
+      ratio * (editorEl.scrollHeight - editorEl.clientHeight);
+    editorEl.scrollTop = editorTarget;
+
+    if (previewRef.current && syncScroll) {
+      const previewEl = previewRef.current;
+      const previewTarget =
+        ratio * (previewEl.scrollHeight - previewEl.clientHeight);
+      previewEl.scrollTop = previewTarget;
+    }
+  };
+
   const currentTheme = THEME_CONFIG[theme];
 
   const handleDownloadMd = () => {
@@ -84,6 +119,11 @@ const App: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleCodeCopied = () => {
+    setShowCopyToast(true);
+    setTimeout(() => setShowCopyToast(false), 1500);
   };
 
   // Dragging logic
@@ -166,6 +206,10 @@ const App: React.FC = () => {
         onPrint={handlePrint}
         isCentered={isCentered}
         setIsCentered={setIsCentered}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchResults={searchResults}
+        onSelectSearchResult={handleJumpToLine}
       />
 
       <div 
@@ -224,12 +268,14 @@ const App: React.FC = () => {
                 maxWidth: isCentered && viewMode === ViewMode.PREVIEW ? '70%' : '100%',
             }}
         >
-            <Preview 
+        <Preview 
                 content={markdown}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
                 scrollRef={previewRef}
                 theme={currentTheme}
+                onCodeCopy={handleCodeCopied}
+                searchQuery={searchQuery}
             />
         </div>
 
@@ -327,6 +373,20 @@ const App: React.FC = () => {
             <div className="font-bold" style={{ color: 'var(--color-accent)' }}>UTF-8</div>
          </div>
       </div>
+
+      {showCopyToast && (
+        <div
+          className="fixed bottom-6 right-6 px-3 py-2 text-xs border shadow-lg"
+          style={{
+            backgroundColor: 'var(--color-ui)',
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-text)',
+            borderRadius: 'var(--radius)'
+          }}
+        >
+          Copied to clipboard
+        </div>
+      )}
     </div>
   );
 };

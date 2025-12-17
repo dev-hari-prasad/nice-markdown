@@ -118,6 +118,12 @@
       .markdown-body {
         line-height: 1.6;
       }
+
+      .markdown-body .search-hit {
+        background: rgba(250, 204, 21, 0.22);
+        border-radius: 2px;
+        padding: 0 0.05em;
+      }
       
       .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
         color: var(--color-text, #f4f4f5);
@@ -140,12 +146,11 @@
       }
       
       .markdown-body pre {
-        background: var(--color-code-bg, #101012);
-        border: 1px solid var(--color-border, #27272a);
-        padding: 1rem;
-        overflow-x: auto;
-        margin-bottom: 1.5em;
-        border-radius: var(--radius, 4px);
+        background: transparent;
+        border: none;
+        padding: 0;
+        overflow-x: visible;
+        margin: 0;
       }
       
       .markdown-body pre code {
@@ -161,8 +166,8 @@
         margin-left: 0;
         color: var(--color-text-muted, #a1a1aa);
         background: transparent;
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
       }
 
       .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin-bottom: 1.2em; }
