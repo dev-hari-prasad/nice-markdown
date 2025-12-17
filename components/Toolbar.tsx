@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ViewMode, Theme, FontFamily } from '../types';
 import { 
   LayoutTemplate, 
@@ -11,10 +11,16 @@ import {
   Palette,
   FileText,
   File,
-  Minimize2
+  Minimize2,
+  Search
 } from 'lucide-react';
 import { THEME_CONFIG } from '../constants';
 import { Tooltip } from './ui/Tooltip';
+
+type SearchResult = {
+  line: number;
+  text: string;
+};
 
 interface ToolbarProps {
   viewMode: ViewMode;
@@ -35,6 +41,10 @@ interface ToolbarProps {
   onPrint: () => void;
   isCentered: boolean;
   setIsCentered: (c: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  searchResults: SearchResult[];
+  onSelectSearchResult: (line: number) => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -55,13 +65,53 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onDownloadMd,
   onPrint,
   isCentered,
-  setIsCentered
+  setIsCentered,
+  searchQuery,
+  setSearchQuery,
+  searchResults,
+  onSelectSearchResult
 }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [activeResultIndex, setActiveResultIndex] = useState<number>(-1);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setActiveResultIndex(-1);
+  }, [searchQuery, searchResults.length]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!searchResults.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveResultIndex((prev) => {
+        const next = prev + 1;
+        return next >= searchResults.length ? 0 : next;
+      });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveResultIndex((prev) => {
+        if (prev === -1 || prev === 0) return searchResults.length - 1;
+        return prev - 1;
+      });
+    } else if (e.key === 'Enter') {
+      if (!searchResults.length) return;
+      e.preventDefault();
+      const index =
+        activeResultIndex >= 0 && activeResultIndex < searchResults.length
+          ? activeResultIndex
+          : 0;
+      const target = searchResults[index];
+      onSelectSearchResult(target.line);
+      setIsSearchActive(false);
+      searchInputRef.current?.blur();
+    }
+  };
 
   return (
-    <div className="toolbar-container h-14 border-b flex items-center justify-between px-4 select-none shrink-0 relative transition-colors duration-200" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-ui)' }}>
+    <div className="toolbar-container h-14 border-b flex items-center px-4 select-none shrink-0 relative transition-colors duration-200" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-ui)' }}>
       
       {/* Left: Branding & Mode Switch */}
       <div className="flex items-center gap-4">
@@ -84,7 +134,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* View Mode Switcher Group */}
         <div className="flex items-center gap-2">
-            <div className="flex items-center p-[2px] border h-9 gap-1" style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)', borderRadius: 'var(--radius)' }}>
+            <div className="flex items-center p-[2px] px-2 border h-9 gap-1" style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)', borderRadius: 'var(--radius)' }}>
             <Tooltip content="Write Mode">
                 <button
                     onClick={() => setViewMode(ViewMode.WRITE)}
@@ -155,39 +205,85 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
       </div>
 
+      {/* Center: Search */}
+      <div className="flex-1 flex justify-center">
+        <div className="relative w-full max-w-sm">
+          <Search
+            size={14}
+            className="absolute left-2 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--color-text-muted)' }}
+          />
+          <input
+            type="text"
+            ref={searchInputRef}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search text..."
+            onKeyDown={handleSearchKeyDown}
+            onFocus={() => setIsSearchActive(true)}
+            onBlur={() => setIsSearchActive(false)}
+            className="h-9 pl-7 pr-2 text-xs border focus:outline-none w-full"
+            style={{
+              backgroundColor: 'var(--color-bg)',
+              borderColor: 'var(--color-border)',
+              color: 'var(--color-text)',
+              borderRadius: 'var(--radius)'
+            }}
+          />
+          {searchQuery && isSearchActive && (
+            <div
+              className="absolute mt-1 w-full max-h-56 overflow-y-auto border shadow-lg text-xs z-50"
+              style={{
+                backgroundColor: 'var(--color-ui)',
+                borderColor: 'var(--color-border)',
+                borderRadius: 'var(--radius)'
+              }}
+            >
+              {searchResults.length > 0 ? (
+                searchResults.map((result, index) => (
+                  <div
+                    key={result.line}
+                    className={`px-2 py-1 cursor-default transition-transform ${
+                      index === activeResultIndex
+                        ? 'scale-[0.98]'
+                        : 'hover:bg-[var(--color-hover)]'
+                    }`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setActiveResultIndex(index);
+                      onSelectSearchResult(result.line);
+                      setIsSearchActive(false);
+                      searchInputRef.current?.blur();
+                    }}
+                    title={result.text}
+                    style={{ 
+                      color: 'var(--color-text)',
+                      borderTop: index === 0 ? 'none' : '1px solid var(--color-border)',
+                      backgroundColor:
+                        index === activeResultIndex ? 'rgba(250, 204, 21, 0.2)' : 'transparent'
+                    }}
+                  >
+                    <span className="mr-1 opacity-60">#{result.line}</span>
+                    <span className="truncate inline-block max-w-[9rem] align-middle">
+                      {result.text || '(blank line)'}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div
+                  className="px-2 py-1 opacity-60"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  No matches
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
-        
-        {/* Toggles */}
-        <div className="flex items-center gap-2 pr-3 border-r" style={{ borderColor: 'var(--color-border)' }}>
-             <Tooltip content="Line Numbers">
-                <button 
-                    onClick={() => setShowLineNumbers(!showLineNumbers)}
-                    className="p-2 transition-colors"
-                    style={{ 
-                        borderRadius: 'var(--radius)',
-                        backgroundColor: showLineNumbers ? 'var(--color-active)' : 'transparent',
-                        color: showLineNumbers ? 'var(--color-text)' : 'var(--color-text-muted)'
-                    }}
-                >
-                    <AlignJustify size={16} />
-                </button>
-             </Tooltip>
-             <Tooltip content="Sync Scrolling">
-                <button 
-                    onClick={() => setSyncScroll(!syncScroll)}
-                    className="p-2 transition-colors"
-                    style={{ 
-                        borderRadius: 'var(--radius)',
-                        backgroundColor: syncScroll ? 'var(--color-active)' : 'transparent',
-                        color: syncScroll ? 'var(--color-text)' : 'var(--color-text-muted)'
-                    }}
-                >
-                    <MoveVertical size={16} />
-                </button>
-             </Tooltip>
-        </div>
-
         {/* Theme Selector */}
          <div className="flex items-center gap-2">
             <Palette size={14} style={{ color: 'var(--color-text-muted)' }} />
@@ -303,6 +399,46 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* Line Numbers */}
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                                <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                                    Line numbers
+                                </span>
+                                <button
+                                    onClick={() => setShowLineNumbers(!showLineNumbers)}
+                                    className="flex items-center gap-1 px-2 py-1 text-[11px] border transition-colors"
+                                    style={{
+                                        borderRadius: 'var(--radius)',
+                                        backgroundColor: showLineNumbers ? 'var(--color-active)' : 'var(--color-bg)',
+                                        borderColor: 'var(--color-border)',
+                                        color: showLineNumbers ? 'var(--color-text)' : 'var(--color-text-muted)'
+                                    }}
+                                >
+                                    <AlignJustify size={12} />
+                                    {showLineNumbers ? 'On' : 'Off'}
+                                </button>
+                            </div>
+
+                            {/* Sync Scrolling */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                                    Sync scrolling
+                                </span>
+                                <button
+                                    onClick={() => setSyncScroll(!syncScroll)}
+                                    className="flex items-center gap-1 px-2 py-1 text-[11px] border transition-colors"
+                                    style={{
+                                        borderRadius: 'var(--radius)',
+                                        backgroundColor: syncScroll ? 'var(--color-active)' : 'var(--color-bg)',
+                                        borderColor: 'var(--color-border)',
+                                        color: syncScroll ? 'var(--color-text)' : 'var(--color-text-muted)'
+                                    }}
+                                >
+                                    <MoveVertical size={12} />
+                                    {syncScroll ? 'On' : 'Off'}
+                                </button>
                             </div>
                         </div>
                     </div>
