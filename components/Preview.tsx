@@ -137,7 +137,6 @@ const CodeBlock: React.FC<
             __html: highlightSearchInHtml(
               Prism.highlight(
                 String(children).replace(/\n$/, ''),
-                // @ts-expect-error dynamic language lookup
                 Prism.languages[lang] || Prism.languages.markdown,
                 lang
               ),
