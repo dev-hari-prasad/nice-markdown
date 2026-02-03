@@ -147,39 +147,4 @@ export const THEME_CONFIG: Record<Theme, ThemeColors> = {
   }
 };
 
-export const DEFAULT_MARKDOWN = `# Nice Markdown
-
-## 1. Introduction
-Nice Markdown is a minimal, keyboard-centric editor for developers.
-It is designed to be **precise** and **distraction-free**.
-
-### Core Philosophy
-- **Speed**: Instant parsing and rendering.
-- **Focus**: No toolbars cluttering the writing space.
-- **Utility**: First-class support for code, math, and diagrams.
-
-## 2. Features
-
-### Syntax Highlighting
-Full support for major languages with terminal-like styling.
-
-\`\`\`rust
-fn main() {
-    println!("Hello, efficient world!");
-}
-\`\`\`
-
-### Mathematical Notation
-Render LaTeX equations natively:
-$$
-f(x) = \\int_{-\\infty}^\\infty \\hat f(\\xi)\\,e^{2\\pi i \\xi x} \\,d\\xi
-$$
-
-### Structured Data
-| Command | Action | Shortcut |
-|:--------|:-------|:---------|
-| \`:w\`    | Save   | \`Cmd+S\`  |
-| \`:q\`    | Quit   | \`Cmd+W\`  |
-
-> "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
-`;
+export const DEFAULT_MARKDOWN = "";

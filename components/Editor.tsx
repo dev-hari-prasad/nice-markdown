@@ -5,7 +5,7 @@ import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-json';
-import { FontFamily } from '../types';
+import { FontFamily } from '@/lib/types';
 
 interface EditorProps {
   value: string;
@@ -52,7 +52,7 @@ export const Editor: React.FC<EditorProps> = ({
       {showLineNumbers && (
         <div 
           ref={lineNumbersRef}
-          className="flex-shrink-0 flex flex-col items-end pr-3 pl-2 pt-0 text-right select-none border-r border-dashed opacity-70 z-20 transition-colors duration-200 overflow-hidden"
+          className="flex-shrink-0 flex flex-col items-end pr-3 pl-2 pt-[1.5rem] text-right select-none border-r border-dashed opacity-70 z-20 transition-colors duration-200 overflow-hidden"
           style={{ 
             fontFamily, 
             fontSize: `${fontSize}px`, 
@@ -79,7 +79,7 @@ export const Editor: React.FC<EditorProps> = ({
           style={{ 
             fontFamily, 
             fontSize: `${fontSize}px`, 
-            padding: '0 1rem 2rem 1rem', // Match padding with textarea
+            padding: '1.5rem 2rem 2rem 2rem', // Top 1.5rem matches Preview py-6, sides matches px-8
             color: 'var(--color-text-active)'
           }}
           aria-hidden="true"
@@ -97,7 +97,7 @@ export const Editor: React.FC<EditorProps> = ({
           style={{ 
             fontFamily, 
             fontSize: `${fontSize}px`, 
-            padding: '0 1rem 2rem 1rem'
+            padding: '1.5rem 2rem 2rem 2rem'
           }}
         />
       </div>

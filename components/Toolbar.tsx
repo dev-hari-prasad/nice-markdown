@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ViewMode, Theme, FontFamily } from '../types';
+import { ViewMode, Theme, FontFamily } from '@/lib/types';
 import { 
   LayoutTemplate, 
   Columns, 
@@ -12,10 +12,14 @@ import {
   FileText,
   File,
   Minimize2,
-  Search
+  Search,
+  SidebarOpen,
+  MessageSquare,
 } from 'lucide-react';
-import { THEME_CONFIG } from '../constants';
+import { THEME_CONFIG } from '@/lib/constants';
 import { Tooltip } from './ui/Tooltip';
+import { SettingsDialog } from '@/components/SettingsDialog';
+import { useSidebar } from '@/components/SidebarContext';
 
 type SearchResult = {
   line: number;
@@ -69,13 +73,51 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   searchQuery,
   setSearchQuery,
   searchResults,
-  onSelectSearchResult
+  onSelectSearchResult,
 }) => {
+  const { collapsed, toggleSidebar, isChatOpen, toggleChat } = useSidebar();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
   const [activeResultIndex, setActiveResultIndex] = useState<number>(-1);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      // Check if the click is inside any Radix portal or a dialog
+      // This covers Select dropdowns, Dialogs, etc.
+      const isRadixNode = target.closest('[data-radix-portal]') || 
+                         target.closest('[role="dialog"]') ||
+                         target.closest('[role="listbox"]') ||
+                         target.closest('[role="menu"]');
+      
+      if (isRadixNode) return;
+
+      if (settingsRef.current && !settingsRef.current.contains(target)) {
+        setIsSettingsOpen(false);
+      }
+      if (downloadRef.current && !downloadRef.current.contains(target)) {
+        setIsDownloadOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     setActiveResultIndex(-1);
@@ -111,27 +153,33 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="toolbar-container h-14 border-b flex items-center px-4 select-none shrink-0 relative transition-colors duration-200" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-ui)' }}>
+    <div className="toolbar-container p-2.5 border-b flex items-center px-4 select-none shrink-0 relative transition-colors duration-200" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-ui)' }}>
       
-      {/* Left: Branding & Mode Switch */}
+      {collapsed && (
+          <Tooltip content="Open Sidebar">
+              <button 
+                onClick={toggleSidebar} 
+                className="mr-4 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center" 
+                style={{ color: 'var(--color-text)' }}
+              >
+                  <SidebarOpen size={18} />
+              </button>
+          </Tooltip>
+      )}
+
+      {/* Chat Button */}
+      <Tooltip content="AI Chat">
+          <button
+              onClick={toggleChat}
+              className={`p-2 mr-4 rounded-md transition-colors flex items-center justify-center ${isChatOpen ? 'bg-[var(--color-active)]' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+              style={{ color: isChatOpen ? 'var(--color-text)' : 'var(--color-text-muted)' }}
+          >
+              <MessageSquare size={18} />
+          </button>
+      </Tooltip>
+
+      {/* Left: Mode Switch */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5">
-            {/* Logo SVG */}
-            <svg 
-              viewBox="-10 -5 1034 1034" 
-              className="w-5 h-5 -mt-0.5" 
-              fill="currentColor" 
-              style={{ color: 'var(--color-text)' }}
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M922 319q-1 0 -2 1h-11v0h-836q-18 0 -33.5 8.5t-25.5 22.5q-17 26 -13 57v461q1 18 11 32.5t24 22.5q25 14 55 10v1l843 -1q18 -1 32.5 -11t22.5 -24q14 -24 10 -55h1l-1 -459q-1 -17 -11 -31.5t-24 -23.5q-19 -10 -42 -11zM918 367h2q12 0 20 5q6 3 8.5 6.5t2.5 9.5 l1 456v3q2 16 -5 29q-3 5 -6.5 7.5t-9.5 2.5l-840 1h-3q-16 2 -28 -5q-6 -3 -8.5 -6.5t-2.5 -9.5v-458l-1 -4q-2 -14 5.5 -25t18.5 -11h837zM145 464v327h96v-188l96 120l96 -120v188h96v-327h-96l-96 120l-96 -120h-96zM697 464v168h-96l144 159l144 -159h-96v-168h-96z" />
-            </svg>
-            <span className="font-bold tracking-tight text-sm font-mono" style={{ color: 'var(--color-text)' }}>NICE MARKDOWN</span>
-        </div>
-
-        {/* Separator */}
-        <div className="w-px h-4 mx-2" style={{ backgroundColor: 'var(--color-border)' }}></div>
-
         {/* View Mode Switcher Group */}
         <div className="flex items-center gap-2">
             <div className="flex items-center p-[2px] px-2 border h-9 gap-1" style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)', borderRadius: 'var(--radius)' }}>
@@ -222,21 +270,36 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             onKeyDown={handleSearchKeyDown}
             onFocus={() => setIsSearchActive(true)}
             onBlur={() => setIsSearchActive(false)}
-            className="h-9 pl-7 pr-2 text-xs border focus:outline-none w-full"
+            className="h-9 pl-7 pr-16 text-xs border focus:outline-none w-full transition-all"
             style={{
               backgroundColor: 'var(--color-bg)',
               borderColor: 'var(--color-border)',
               color: 'var(--color-text)',
-              borderRadius: 'var(--radius)'
+              borderRadius: 'var(--radius)',
+              fontFamily: fontFamily
             }}
           />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            <kbd 
+              className="px-1.5 py-0.5 rounded border border-current opacity-60 text-[9px] font-sans flex items-center bg-muted/50"
+              style={{ 
+                borderColor: 'var(--color-text-muted)', 
+                color: 'var(--color-text-muted)',
+                backgroundColor: 'rgba(128, 128, 128, 0.1)'
+              }}
+            >
+              <span className="mr-0.5">Ctrl</span>
+              <span>K</span>
+            </kbd>
+          </div>
           {searchQuery && isSearchActive && (
             <div
               className="absolute mt-1 w-full max-h-56 overflow-y-auto border shadow-lg text-xs z-50"
               style={{
                 backgroundColor: 'var(--color-ui)',
                 borderColor: 'var(--color-border)',
-                borderRadius: 'var(--radius)'
+                borderRadius: 'var(--radius)',
+                fontFamily: fontFamily
               }}
             >
               {searchResults.length > 0 ? (
@@ -305,15 +368,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
 
         {/* Action Group: Settings & Download */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1 ml-auto">
             {/* Settings Button */}
             <div 
                 className="relative z-50"
-                onMouseEnter={() => setIsSettingsOpen(true)}
-                onMouseLeave={() => setIsSettingsOpen(false)}
+                ref={settingsRef}
             >
                 <button 
-                    className={`p-2 transition-colors ${isSettingsOpen ? 'bg-[var(--color-active)]' : 'hover:bg-[var(--color-hover)]'}`}
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className={`p-2 transition-colors ${isSettingsOpen ? 'bg-[var(--color-active)]' : 'hover:bg-[var(--color-bg)]'}`}
                     style={{ color: 'var(--color-text-muted)', borderRadius: 'var(--radius)' }}
                 >
                     <Settings size={16} />
@@ -440,19 +503,25 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                                     {syncScroll ? 'On' : 'Off'}
                                 </button>
                             </div>
+
+                            {/* Database Settings */}
+                            <div className="pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                                <SettingsDialog />
+                            </div>
                         </div>
                     </div>
                 )}
             </div>
 
+
             {/* Download Button */}
-            <div 
+            <div  
                 className="relative z-50"
-                onMouseEnter={() => setIsDownloadOpen(true)}
-                onMouseLeave={() => setIsDownloadOpen(false)}
+                ref={downloadRef}
             >
                 <button 
-                    className={`p-2 transition-colors ${isDownloadOpen ? 'bg-[var(--color-active)]' : 'hover:bg-[var(--color-hover)]'}`}
+                    onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                    className={`p-2 transition-colors ${isDownloadOpen ? 'bg-[var(--color-active)]' : 'hover:bg-[var(--color-bg)]'}`}
                     style={{ color: 'var(--color-text-muted)', borderRadius: 'var(--radius)' }}
                 >
                     <Download size={16} />

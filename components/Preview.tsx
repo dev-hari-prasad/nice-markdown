@@ -12,7 +12,7 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-json';
 import { Copy } from 'lucide-react';
-import { FontFamily, ThemeColors } from '../types';
+import { FontFamily, ThemeColors } from '@/lib/types';
 
 interface PreviewProps {
   content: string;
@@ -277,45 +277,45 @@ export const Preview: React.FC<PreviewProps> = ({
               </code>
             );
           },
-          p({ children, ...props }) {
+          p({ node, children, ...props }: any) {
             return (
               <p {...props}>{highlightNodeText(children, searchQuery)}</p>
             );
           },
-          li({ children, ...props }) {
+          li({ node, children, ...props }: any) {
             return (
               <li {...props}>{highlightNodeText(children, searchQuery)}</li>
             );
           },
-          h1({ children, ...props }) {
+          h1({ node, children, ...props }: any) {
             return (
               <h1 {...props}>{highlightNodeText(children, searchQuery)}</h1>
             );
           },
-          h2({ children, ...props }) {
+          h2({ node, children, ...props }: any) {
             return (
               <h2 {...props}>{highlightNodeText(children, searchQuery)}</h2>
             );
           },
-          h3({ children, ...props }) {
+          h3({ node, children, ...props }: any) {
             return (
               <h3 {...props}>{highlightNodeText(children, searchQuery)}</h3>
             );
           },
-          h4({ children, ...props }) {
+          h4({ node, children, ...props }: any) {
             return (
               <h4 {...props}>{highlightNodeText(children, searchQuery)}</h4>
             );
           },
           // Custom renderers
-          table: ({ children }) => <div className="overflow-x-auto my-6"><table style={{ width: '100%', borderCollapse: 'collapse' }}>{children}</table></div>,
+          table: ({ node, children, ...props }: any) => <div className="overflow-x-auto my-6"><table style={{ width: '100%', borderCollapse: 'collapse' }} {...props}>{children}</table></div>,
         }}
       >
         {content}
       </ReactMarkdown>
       
       {/* Footer spacer */}
-      <div className="h-32"></div> 
+      <div className="h-12"></div> 
     </div>
   );
 };

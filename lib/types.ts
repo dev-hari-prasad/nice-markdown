@@ -16,11 +16,11 @@ export enum Theme {
 }
 
 export enum FontFamily {
-  JETBRAINS = 'JetBrains Mono',
-  FIRA = 'Fira Code',
-  IBM = 'IBM Plex Mono',
-  INTER = 'Inter',
-  MANROPE = 'Manrope'
+  JETBRAINS = 'var(--font-jetbrains)',
+  FIRA = 'var(--font-fira)',
+  IBM = 'var(--font-ibm)',
+  INTER = 'var(--font-inter)',
+  MANROPE = 'var(--font-manrope)'
 }
 
 export interface AppState {

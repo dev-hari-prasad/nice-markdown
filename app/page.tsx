@@ -1,21 +1,29 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Editor } from './components/Editor';
-import { Preview } from './components/Preview';
-import { Toolbar } from './components/Toolbar';
-import { ViewMode, Theme, FontFamily, EditorStats } from './types';
-import { THEME_CONFIG, DEFAULT_MARKDOWN } from './constants';
-import { useScrollSync } from './hooks/useScrollSync';
-import { X } from 'lucide-react';
+'use client';
 
-const App: React.FC = () => {
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { Editor } from '@/components/Editor';
+import { Preview } from '@/components/Preview';
+import { Toolbar } from '@/components/Toolbar';
+import { ViewMode, Theme, FontFamily, EditorStats } from '@/lib/types';
+import { THEME_CONFIG, DEFAULT_MARKDOWN } from '@/lib/constants';
+import { useScrollSync } from '@/hooks/useScrollSync';
+import { X } from 'lucide-react';
+import { useFileContext } from '@/components/FileContext';
+import { useTheme } from '@/components/ThemeContext';
+
+export default function Home() {
+  const { activeFile, updateFileContent } = useFileContext();
+  const { 
+      theme, setTheme, currentTheme,
+      fontFamily, setFontFamily,
+      borderRadius, setBorderRadius
+  } = useTheme();
+  
   const [markdown, setMarkdown] = useState(DEFAULT_MARKDOWN);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SPLIT);
-  const [theme, setTheme] = useState<Theme>(Theme.ATOM_ONE_DARK);
-  const [fontFamily, setFontFamily] = useState<FontFamily>(FontFamily.JETBRAINS);
   const [fontSize, setFontSize] = useState(14);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [syncScroll, setSyncScroll] = useState(true);
-  const [borderRadius, setBorderRadius] = useState(0);
   const [isCentered, setIsCentered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCopyToast, setShowCopyToast] = useState(false);
@@ -30,11 +38,46 @@ const App: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Scroll Sync Refs
+  // Initialize with null but cast to RefObject to match strict types if needed, 
+  // or ensure hooks understand null. useScrollSync typically expects RefObject<HTMLElement>.
+  // The errors say: Type 'RefObject<HTMLTextAreaElement | null>' is not assignable to 'RefObject<HTMLElement>'.
+  // This is because RefObject in React includes null, but strict usage might clash.
+  // Actually, useRef<HTMLTextAreaElement>(null) returns RefObject<HTMLTextAreaElement>.
+  // If useScrollSync asks for RefObject<HTMLElement>, generic RefObject<T> is covariant only if T matches.
+  // But HTMLTextAreaElement extends HTMLElement.
+  // The issue is likely 'null' being part of the type vs expected non-null?
+  // No, RefObject.current is T | null.
+  // The error: "Type 'HTMLTextAreaElement | null' is not assignable to type 'HTMLElement'. Type 'null' is not assignable..."
+  // It seems useScrollSync expects RefObject<HTMLElement> where current is NOT null?
+  // Or maybe it expects RefObject<HTMLElement> explicitly.
+  
+  // Let's coerce the refs.
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
+  // Sync activeFile -> markdown
+  useEffect(() => {
+    if (activeFile) {
+        if (activeFile.content !== undefined) {
+            if (activeFile.content !== markdown) {
+                setMarkdown(activeFile.content);
+            }
+        } else {
+            // Content is loading, clear editor to avoid stale content
+            setMarkdown('');
+        }
+    }
+  }, [activeFile]);
+
+  const handleEditorChange = (value: string) => {
+    setMarkdown(value);
+    if (activeFile) {
+        updateFileContent(activeFile.id, value);
+    }
+  };
+
   // Enable sync hook
-  useScrollSync(editorRef, previewRef, syncScroll, viewMode);
+  useScrollSync(editorRef as React.RefObject<HTMLElement>, previewRef as React.RefObject<HTMLElement>, syncScroll, viewMode);
 
   // Check local storage for star prompt
   useEffect(() => {
@@ -103,8 +146,6 @@ const App: React.FC = () => {
     }
   };
 
-  const currentTheme = THEME_CONFIG[theme];
-
   const handleDownloadMd = () => {
     const blob = new Blob([markdown], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -161,30 +202,10 @@ const App: React.FC = () => {
 
   return (
     <div 
-        className="app-container h-screen w-screen flex flex-col overflow-hidden transition-colors duration-200"
+        className="app-container h-full w-full flex flex-col overflow-hidden transition-colors duration-200"
         style={{
-            // Inject CSS Variables for Global Theming
-            '--color-bg': currentTheme.bg,
-            '--color-ui': currentTheme.ui,
-            '--color-border': currentTheme.border,
-            '--color-text': currentTheme.text,
-            '--color-text-muted': currentTheme.textMuted,
-            '--color-accent': currentTheme.accent,
-            '--color-hover': currentTheme.hover,
-            '--color-active': currentTheme.active,
-            '--color-code-bg': currentTheme.codeBg,
-            '--color-code-text': currentTheme.codeText,
-            '--color-line-num': currentTheme.lineNum,
-            '--color-scroll-track': currentTheme.scrollTrack,
-            '--color-scroll-thumb': currentTheme.scrollThumb,
-            '--color-tooltip-bg': currentTheme.tooltipBg,
-            '--color-tooltip-text': currentTheme.tooltipText,
-            
             // Dynamic Border Radius
             '--radius': `${borderRadius}px`,
-            
-            backgroundColor: 'var(--color-bg)',
-            color: 'var(--color-text)'
         } as React.CSSProperties}
     >
       <Toolbar 
@@ -237,19 +258,22 @@ const App: React.FC = () => {
         >
             <Editor 
                 value={markdown}
-                onChange={setMarkdown}
+                onChange={handleEditorChange}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
                 showLineNumbers={showLineNumbers}
-                scrollRef={editorRef}
+                scrollRef={editorRef as React.RefObject<HTMLTextAreaElement>}
             />
         </div>
 
         {/* Resizer Handle */}
         {viewMode === ViewMode.SPLIT && (
             <div 
-                className="resizer w-1 -ml-0.5 hover:w-1.5 transition-all cursor-col-resize z-30 flex-shrink-0"
-                style={{ backgroundColor: 'transparent' }}
+                className="resizer w-1.5 -ml-[3px] hover:bg-blue-500/20 transition-all cursor-col-resize z-30 flex-shrink-0 border-l border-r"
+                style={{ 
+                    borderColor: 'var(--color-border)',
+                    backgroundColor: 'transparent'
+                }}
                 onMouseDown={() => setIsDragging(true)}
             />
         )}
@@ -272,7 +296,7 @@ const App: React.FC = () => {
                 content={markdown}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
-                scrollRef={previewRef}
+                scrollRef={previewRef as React.RefObject<HTMLDivElement>}
                 theme={currentTheme}
                 onCodeCopy={handleCodeCopied}
                 searchQuery={searchQuery}
@@ -297,7 +321,7 @@ const App: React.FC = () => {
                       <a href="https://github.com/dev-hari-prasad"  target="_blank" rel="noopener noreferrer"
                         style={{
                           color: 'var(--color-text)',
-                          fontWeight: 'bold' }}>Hari Prasad 
+                          fontWeight: 'bold' }}>Hari 
                       </a>
                 </span>
               <span className="mx-1">•</span>
@@ -389,6 +413,4 @@ const App: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default App;
+}
