@@ -601,7 +601,45 @@ export function ChatInterface() {
   };
 
   return (
-    <div className={cn("flex flex-col h-full border-r bg-background transition-all duration-300 overflow-hidden", isOpen ? "w-full md:w-[450px]" : "w-0 border-r-0")}>
+    <div className={cn("flex flex-col h-full border-r bg-background transition-all duration-300 overflow-hidden relative", isOpen ? "w-full md:w-[450px]" : "w-0 border-r-0")}>
+      
+      {/* Model Picker Popup (Ctrl + /) */}
+      {showModelPicker && availableModels.length > 0 && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="bg-popover border rounded-lg shadow-2xl w-[280px] overflow-hidden">
+            <div className="p-3 border-b bg-muted/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Select Model</span>
+                <span className="text-[10px] text-muted-foreground">Ctrl + /</span>
+              </div>
+            </div>
+            <div className="max-h-[300px] overflow-y-auto p-1">
+              {availableModels.map((m, idx) => (
+                <div
+                  key={m}
+                  className={cn(
+                    "flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm",
+                    idx === modelPickerIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted"
+                  )}
+                  onClick={() => {
+                    setModel(m);
+                    setShowModelPicker(false);
+                  }}
+                >
+                  <span className="truncate">{m}</span>
+                  {starredModel === m && <Star size={12} className="text-yellow-500 fill-yellow-500" />}
+                </div>
+              ))}
+            </div>
+            <div className="p-2 border-t bg-muted/30 text-[10px] text-muted-foreground flex justify-center gap-4">
+              <span>↑↓ Navigate</span>
+              <span>Enter Select</span>
+              <span>Esc Close</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-2 p-2.5 border-b bg-muted/30">
         <div className="flex items-center justify-between">
